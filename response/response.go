@@ -1,6 +1,7 @@
 package response
 
 import (
+	"fmt"
 	"net"
 )
 
@@ -9,10 +10,15 @@ var Formats = map[string]bool{
 	"text/html": true,
 }
 
+type ResponseEntryProperty struct {
+	Name  string
+	Value string
+}
+
 type ResponseEntry struct {
 	Link string
 	Name string
-	Data map[string]string
+	Data []ResponseEntryProperty
 }
 
 type ResponseData struct {
@@ -35,6 +41,38 @@ func NewResponseFormatter(mimetype string) ResponseFormatter {
 	}
 }
 
+func getInterfaceData(iface net.Interface) []ResponseEntryProperty {
+	data := []ResponseEntryProperty{
+		{"Index", fmt.Sprint(iface.Index)},
+		{"Name", iface.Name},
+		{"MTU", fmt.Sprint(iface.MTU)},
+		{"Hardware Address", iface.HardwareAddr.String()},
+		{"Flags", iface.Flags.String()},
+	}
+
+	addrs, err := iface.Addrs()
+	if err != nil {
+		data = append(data, ResponseEntryProperty{"Error on retrieving unicast addresses", err.Error()})
+	} else {
+		for _, a := range addrs {
+			data = append(data, ResponseEntryProperty{"Network", a.Network()})
+			data = append(data, ResponseEntryProperty{"Address", a.String()})
+		}
+	}
+
+	addrs, err = iface.MulticastAddrs()
+	if err != nil {
+		data = append(data, ResponseEntryProperty{"Error on retrieving multicast addresses", err.Error()})
+	} else {
+		for _, a := range addrs {
+			data = append(data, ResponseEntryProperty{"Network", a.Network()})
+			data = append(data, ResponseEntryProperty{"Multicast Address", a.String()})
+		}
+	}
+
+	return data
+}
+
 // Converts a slice of network interfaces to the
 // representation that can be passed to the chosen
 // ResponseFormatter.
@@ -42,7 +80,7 @@ func NewResponseData(ifaces []net.Interface) ResponseData {
 	entries := make([]ResponseEntry, len(ifaces))
 
 	for i, iface := range ifaces {
-		entries[i] = ResponseEntry{iface.Name, iface.Name, map[string]string{"key1": "value1", "key2": "value2"}}
+		entries[i] = ResponseEntry{iface.Name, iface.Name, getInterfaceData(iface)}
 	}
 
 	var title string
