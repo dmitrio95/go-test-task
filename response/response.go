@@ -6,8 +6,9 @@ import (
 )
 
 // Contains MIME types of available ResponseFormatters
-var Formats = map[string]bool{
-	"text/html": true,
+var Formats = map[string](func() ResponseFormatter){
+	"text/html":  newHTMLFormatter,
+	"text/plain": newSimpleFormatter,
 }
 
 type ResponseEntryProperty struct {
@@ -33,10 +34,10 @@ type ResponseFormatter interface {
 // Returns new ResponseFormatter by its MIME type. If such
 // a formatter does not exist, returns nil.
 func NewResponseFormatter(mimetype string) ResponseFormatter {
-	switch mimetype {
-	case "text/html":
-		return newHTMLFormatter()
-	default:
+	f, ok := Formats[mimetype]
+	if ok {
+		return f()
+	} else {
 		return nil
 	}
 }

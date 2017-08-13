@@ -41,7 +41,7 @@ func (f htmlFormatter) FormatResponse(data ResponseData) (string, error) {
 	return buf.String(), err
 }
 
-func newHTMLFormatter() *htmlFormatter {
+func newHTMLFormatter() ResponseFormatter {
 	f := htmlFormatter{}
 	f.pageTemplate = template.Must(template.New("page").Parse(sPageTemplate))
 
