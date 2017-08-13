@@ -6,10 +6,13 @@ import (
 )
 
 // Contains MIME types of available ResponseFormatters
-var Formats = map[string](func() ResponseFormatter){
-	"text/html":  newHTMLFormatter,
-	"text/plain": newSimpleFormatter,
-}
+var (
+	Formats = map[string](func() ResponseFormatter){
+		"text/html":  newHTMLFormatter,
+		"text/plain": newSimpleFormatter,
+	}
+	DefaultFormat = "text/html"
+)
 
 type ResponseEntryProperty struct {
 	Name  string

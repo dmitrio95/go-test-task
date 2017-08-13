@@ -25,3 +25,12 @@ func TestFormattersAvailable(t *testing.T) {
 		}
 	}
 }
+
+// Ensure that the formatter specified by
+// response.DefaultFormat exists
+func TestDefaultFormatterAvailable(t *testing.T) {
+	fmt := response.NewResponseFormatter(response.DefaultFormat)
+	if fmt == nil {
+		t.Error("Default formatter is not available:", response.DefaultFormat)
+	}
+}
