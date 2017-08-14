@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -11,12 +12,14 @@ import (
 	"github.com/dmitrio95/go-test-task/handler"
 )
 
-const ifacesURL = "/interfaces/"
+const (
+	ifacesURL = "/interfaces/"
+	rootURL   = "/"
+)
 
 var badURLs = []string{
 	"/asdf/",
 	"/asdf/lo/",
-	"/interfaces/asdf/",
 }
 
 func newEmptyReader() io.Reader {
@@ -38,7 +41,23 @@ func TestPOST(t *testing.T) {
 	}
 }
 
+// Fill bad URLs list with some URLs that can not be
+// guessed for sure, e.g. URL of the absent network
+// interface
+func initBadURLs() {
+	for i := 0; ; i++ {
+		ifname := "asdf" + fmt.Sprint(i)
+		_, err := net.InterfaceByName(ifname)
+		if err != nil {
+			badURLs = append(badURLs, ifacesURL+ifname+"/")
+			break
+		}
+	}
+}
+
 func TestBadURLs(t *testing.T) {
+	initBadURLs()
+
 	h := handler.NewHandler()
 
 	for _, target := range badURLs {
@@ -73,5 +92,19 @@ func TestInterfacesListResponse(t *testing.T) {
 		if resp.Code == http.StatusOK {
 			t.Error("GET request on", ifacesURL, ": server has not reported a error:", err.Error())
 		}
+	}
+}
+
+// Ensure that the main page works
+func TestRootResponse(t *testing.T) {
+	h := handler.NewHandler()
+
+	req := httptest.NewRequest("GET", rootURL, newEmptyReader())
+	resp := httptest.NewRecorder()
+
+	h.ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusOK {
+		t.Error("GET request on", rootURL, "failed")
 	}
 }
