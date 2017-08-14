@@ -56,7 +56,7 @@ func TestBadURLs(t *testing.T) {
 // Basic test ensuring that interfaces list request
 // finishes succesfully (or not succesfully, if
 // net.Interfaces() call on current system returns a error)
-func TestInterfacesListResponce(t *testing.T) {
+func TestInterfacesListResponse(t *testing.T) {
 	h := handler.NewHandler()
 
 	req := httptest.NewRequest("GET", ifacesURL, newEmptyReader())
