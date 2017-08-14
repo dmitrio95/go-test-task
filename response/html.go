@@ -19,8 +19,6 @@ const (
                 <table>
                     {{range .Data}}
                         <tr><td>{{.Name}}</td><td>{{.Value}}</td></tr>
-                    {{else}}
-                        <tr><td>No additional info</td></tr>
                     {{end}}
                 </table>
             </div>
