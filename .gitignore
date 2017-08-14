@@ -1,6 +1,3 @@
 .directory
-*.sh
-!build.sh
-!build_docker.sh
+*~.sh
 docker/go-test-task
-
