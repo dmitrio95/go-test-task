@@ -45,8 +45,24 @@ func (IfDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	writeResponse(w, r, data)
 }
 
+func HandleRootURL(w http.ResponseWriter, r *http.Request) {
+	if !checkGET(w, r) {
+		return
+	}
+
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+
+	data := response.ResponseData{"go-test-task", []response.ResponseEntry{{ifacesURL, "List of network interfaces", nil}}}
+
+	writeResponse(w, r, data)
+}
+
 func NewHandler() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("/", HandleRootURL)
 	mux.Handle(ifacesURL, http.StripPrefix(ifacesURL, IfDataHandler{}))
 	return mux
 }
