@@ -14,17 +14,14 @@ import (
 	"github.com/dmitrio95/go-test-task/response"
 )
 
+const ifacesURL = "/interfaces/"
+
 type IfDataHandler struct{}
 
 func (IfDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "" && r.Method != "GET" {
-		http.Error(w, "These data are read only!", http.StatusForbidden)
+	if !checkGET(w, r) {
 		return
 	}
-
-	acceptHeader := r.Header.Get("Accept")
-	format := chooseResponseFormat(acceptHeader)
-	fmt := response.NewResponseFormatter(format)
 
 	var data response.ResponseData
 
@@ -45,17 +42,12 @@ func (IfDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		data = response.NewResponseData([]net.Interface{*iface})
 	}
 
-	resp, err := fmt.FormatResponse(data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	io.WriteString(w, resp)
+	writeResponse(w, r, data)
 }
 
 func NewHandler() http.Handler {
 	mux := http.NewServeMux()
-	mux.Handle("/interfaces/", http.StripPrefix("/interfaces/", IfDataHandler{}))
+	mux.Handle(ifacesURL, http.StripPrefix(ifacesURL, IfDataHandler{}))
 	return mux
 }
 
@@ -105,4 +97,26 @@ func chooseResponseFormat(acceptHeader string) (format string) {
 	}
 
 	return response.DefaultFormat
+}
+
+func checkGET(w http.ResponseWriter, r *http.Request) bool {
+	if r.Method != "" && r.Method != "GET" {
+		http.Error(w, "These data are read only!", http.StatusForbidden)
+		return false
+	}
+	return true
+}
+
+// Writes a response by the given ResponseData structure
+func writeResponse(w http.ResponseWriter, r *http.Request, data response.ResponseData) {
+	acceptHeader := r.Header.Get("Accept")
+	format := chooseResponseFormat(acceptHeader)
+	fmt := response.NewResponseFormatter(format)
+
+	resp, err := fmt.FormatResponse(data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	io.WriteString(w, resp)
 }
